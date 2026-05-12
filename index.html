@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <title>CV Intelligence Matcher (RAG)</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        body{
+            background:#070b1a;
+            color:white;
+            min-height:100vh;
+            padding:40px;
+            transition:0.3s;
+        }
+
+        body.light{
+            background:#f5f7ff;
+            color:#111;
+        }
+
+        .container{
+            max-width:1000px;
+            margin:auto;
+        }
+
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:30px;
+        }
+
+        .theme-btn{
+            padding:10px 18px;
+            border:none;
+            border-radius:12px;
+            cursor:pointer;
+            background:#7c4dff;
+            color:white;
+            font-weight:bold;
+        }
+
+        h1{
+            font-size:60px;
+            margin-bottom:10px;
+        }
+
+        .purple{
+            color:#8b5cf6;
+        }
+
+        .subtitle{
+            opacity:0.8;
+            margin-bottom:40px;
+            font-size:20px;
+        }
+
+        .upload-box{
+            background:#111b34;
+            border-radius:30px;
+            padding:60px;
+            text-align:center;
+            margin-bottom:40px;
+        }
+
+        body.light .upload-box{
+            background:white;
+        }
+
+        .upload-box input{
+            margin-top:20px;
+        }
+
+        .upload-btn{
+            margin-top:20px;
+            padding:15px 25px;
+            border:none;
+            border-radius:14px;
+            background:#8b5cf6;
+            color:white;
+            cursor:pointer;
+            font-size:18px;
+            font-weight:bold;
+        }
+
+        .search-box{
+            display:flex;
+            gap:15px;
+            margin-bottom:40px;
+        }
+
+        .search-box input{
+            flex:1;
+            padding:20px;
+            border:none;
+            border-radius:20px;
+            font-size:18px;
+            outline:none;
+        }
+
+        .search-box button{
+            padding:20px 30px;
+            border:none;
+            border-radius:20px;
+            background:#8b5cf6;
+            color:white;
+            cursor:pointer;
+            font-size:18px;
+            font-weight:bold;
+        }
+
+        .result-card{
+            background:#111b34;
+            padding:30px;
+            border-radius:25px;
+            line-height:1.8;
+            white-space:pre-wrap;
+        }
+
+        body.light .result-card{
+            background:white;
+        }
+
+        .status{
+            margin-top:20px;
+            color:#8b5cf6;
+            font-weight:bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="topbar">
+        <div>
+            <h1>
+                CV Intelligence
+                <span class="purple">Matcher</span>
+            </h1>
+
+            <div class="subtitle">
+                Upload cv and query them using : (RAG + LLM)
+            </div>
+        </div>
+
+        <button class="theme-btn" onclick="toggleTheme()">
+            THEME
+        </button>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="upload-box">
+
+        <h2>Upload PDF Resume</h2>
+
+        <input type="file" id="fileInput" />
+
+        <br>
+
+        <button class="upload-btn" onclick="uploadPDF()">
+            Upload & Process
+        </button>
+
+        <div class="status" id="uploadStatus"></div>
+
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-box">
+
+        <input
+            type="text"
+            id="queryInput"
+            placeholder="Ask anything using english or arabic"
+        />
+
+        <button onclick="askQuestion()">
+            GO 
+        </button>
+
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-card" id="result">
+
+        Results will show here . . . .
+
+    </div>
+
+</div>
+
+<script>
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light")
+}
+
+async function uploadPDF(){
+
+    const fileInput = document.getElementById("fileInput")
+
+    if(fileInput.files.length === 0){
+
+        alert("Choose PDF first")
+        return
+    }
+
+    const file = fileInput.files[0]
+
+    const formData = new FormData()
+
+    formData.append("file", file)
+
+    document.getElementById("uploadStatus").innerText =
+        "Uploading..."
+
+    // upload
+    await fetch("/upload", {
+        method:"POST",
+        body:formData
+    })
+
+    // process
+    await fetch(`/process/${file.name}`, {
+        method:"POST"
+    })
+
+    document.getElementById("uploadStatus").innerText =
+        "✅ CV uploaded and processed"
+}
+
+async function askQuestion(){
+
+    const query =
+        document.getElementById("queryInput").value
+
+    const response = await fetch(
+        `/answer?query=${encodeURIComponent(query)}`,
+        {
+            method:"POST"
+        }
+    )
+
+    const data = await response.json()
+
+    document.getElementById("result").innerText =
+        data.answer
+}
+
+</script>
+
+</body>
+</html>
